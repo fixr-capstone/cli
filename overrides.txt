@@ -1,0 +1,3 @@
+# fixr-rag tells uv to fetch ml-filtering over SSH. `uv tool install` ignores
+# pyproject's [tool.uv] overrides, so pass this file with --overrides to keep HTTPS.
+ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.2.0

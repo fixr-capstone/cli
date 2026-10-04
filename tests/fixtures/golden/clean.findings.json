@@ -1,0 +1,26 @@
+[
+  {
+    "id": "api0",
+    "style": true,
+    "rule": "F401",
+    "severity": "low",
+    "title": "'sqlite3' imported but unused",
+    "description": "F401: 'sqlite3' imported but unused",
+    "file": "clean.py",
+    "line": 1,
+    "snippet": "",
+    "suggestedFix": ""
+  },
+  {
+    "id": "api1",
+    "style": true,
+    "rule": "E302",
+    "severity": "low",
+    "title": "expected 2 blank lines, found 1",
+    "description": "E302: expected 2 blank lines, found 1",
+    "file": "clean.py",
+    "line": 3,
+    "snippet": "",
+    "suggestedFix": ""
+  }
+]

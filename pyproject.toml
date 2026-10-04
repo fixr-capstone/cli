@@ -1,0 +1,51 @@
+[project]
+name = "fixr-cli"
+version = "0.1.0"
+description = "Security triage for Python projects from the command line: Fixr's scanners, false-alarm filter and explanations"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "static-analysis-bundle @ git+https://github.com/fixr-capstone/static-analysis-bundle@v0.1.1",
+    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.2.0",
+    "fixr-rag @ git+https://github.com/fixr-capstone/RAG-implementation@v0.2.1",
+    # static-analysis-bundle drives these through their internal APIs, so a new
+    # release can break it; keep them on the versions the backend is locked to.
+    "bandit==1.9.4",
+    "deptry==0.25.1",
+    "flake8==7.3.0",
+    "pip-audit==2.10.1",
+    "packaging>=24",
+    "rich>=13.7",
+]
+
+[project.scripts]
+fixr = "fixr_cli.cli:main"
+
+[tool.uv]
+# fixr-rag points uv at ml-filtering over SSH; this keeps every clone on HTTPS.
+override-dependencies = [
+    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fixr_cli"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: runs the real scanners"]
+
+[tool.ruff]
+line-length = 100

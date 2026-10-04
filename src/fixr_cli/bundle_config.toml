@@ -1,0 +1,169 @@
+### config file for Fixr static analysis bundle ###
+# To omit optional arguments for tools, simply comment them out
+
+[fixr]
+common_directory="fixr_static_analysis"
+coerce_json_output=true
+coerce_human_readable_output=true
+
+# invocation_order=["bandit", "pip-audit", "deptry", "flake8"]
+suppress_logs=false
+
+[bandit]
+targets = ["."]
+
+recursive = true
+aggregate = "vuln"
+number = 3
+# config_file = ""
+profile = ""
+tests = []
+skips = []
+severity_level = "low"
+confidence_level = "low"
+# msg_template = ""
+# output_file = ""
+verbose = false
+debug = false
+quiet = true
+ignore_nosec = false
+# bandit matches these as globs against the whole path, so a bare ".venv"
+# never matches "./.venv/Lib/site-packages/..." and the venv gets scanned
+exclude = [
+    "./.venv",
+    "*/.venv/*",
+    "*/venv/*",
+    "*/site-packages/*",
+    "*/node_modules/*",
+    "*/.git/*",
+    "*/.tox/*",
+    "*/.nox/*",
+]
+baseline = ""
+
+[deptry]
+root = ["."]
+
+verbose = false
+# config = ""
+no_ansi = true
+ignore = []
+per_rule_ignores = {}
+exclude = [".venv"]
+# extend_exclude = []
+ignore_notebooks = false
+requirements_files = [
+    "requirements.txt",
+]
+requirements_files_dev = [
+    "dev-requirements.txt",
+    "requirements-dev.txt",
+]
+known_first_party = []
+package_module_name_map = {}
+optional_dependencies_dev_groups = []
+non_dev_dependency_groups = []
+experimental_namespace_package = false
+# json_output = ""
+github_output = false
+github_warning_errors = []
+enforce_posix_paths=false
+
+[flake8]
+targets = "./"
+
+# General options
+verbose = 0
+# output_file = ""
+# append_config = []
+# config = ""
+isolated = false
+enable_extensions = []
+require_plugins = []
+quiet = 0
+color = "auto"
+count = false
+exclude = [
+    ".svn",
+    "CVS",
+    ".bzr",
+    ".hg",
+    ".git",
+    "__pycache__",
+    ".tox",
+    ".nox",
+    ".eggs",
+    "*.egg",
+    "*venv"
+]
+extend_exclude = ["*venv", "site-packages", "node_modules"]
+filename = [
+    "*.py",
+]
+stdin_display_name = "stdin"
+format = "default"
+hang_closing = false
+ignore = [
+    "E121",
+    "E123",
+    "E126",
+    "E226",
+    "E24",
+    "E704",
+    "W503",
+    "W504",
+]
+extend_ignore = []
+per_file_ignores = {}
+max_line_length = 79
+# max_doc_length = 79
+indent_size = 4
+select = []
+extend_select = []
+disable_noqa = false
+show_source = false
+statistics = false
+jobs = "auto"
+tee = false
+benchmark = false
+bug_report = false
+# mccabe
+# max_complexity = 10
+# pyflakes
+builtins = []
+doctests = false
+
+[pip-audit]
+# Positional argument (pip-audit defaults to None)
+project_path = "."
+
+local = false
+# requirement = [
+#     "requirements.txt",
+# ]
+locked = false
+vulnerability_service = "pypi"
+osv_url = "https://api.osv.dev/v1/query"
+dry_run = false
+strict = false
+desc = "auto"
+aliases = "auto"
+# cache_dir = ""
+progress_spinner = "off"
+timeout = 15
+# path = [
+#     ".venv",
+# ]
+verbose = 0
+require_hashes = false
+# index_url = ""
+# extra_index_url = [
+#     "https://example.com/simple",
+# ]
+skip_editable = false
+no_deps = false
+# output = ""
+# ignore_vuln = [
+#     "GHSA-xxxx-xxxx-xxxx",
+# ]
+disable_pip = false

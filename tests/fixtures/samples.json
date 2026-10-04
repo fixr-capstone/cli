@@ -1,0 +1,349 @@
+{
+ "messy": {
+  "raw": 16,
+  "dropped": [
+   {
+    "rule_id": "B324",
+    "line": 9
+   }
+  ],
+  "findings": [
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B105",
+    "severity": "high",
+    "file_path": "app.py",
+    "line": 6,
+    "column": 12,
+    "message": "Possible hardcoded password: 'sk-live-4f9a2b8c1d3e4f5a6b7c8d9e0f1a2b3c'",
+    "snippet": "5 \n6 API_TOKEN = \"sk-live-4f9a2b8c1d3e4f5a6b7c8d9e0f1a2b3c\"\n7 \n",
+    "cwe_id": 259,
+    "confidence": "MEDIUM",
+    "metadata": {
+     "test_name": "hardcoded_password_string",
+     "explanation": "The literal token is stored in the source file, so anyone who can read the repository (including anyone who clones the repo or pulls from a CI server) can use it to authenticate to the service. If the token is ever pushed to a public repository or shared inadvertently, the attacker can immediately access the account or data associated with that key, leading to data loss or service abuse.  \n\nMove the value out of the code and retrieve it at runtime. For example, read it from an environment variable and fail early if it\u2019s missing.  \n\n```python\n# app.py\nimport os\n\n# The token should be supplied by the deployment environment\nAPI_TOKEN = os.getenv(\"API_TOKEN\")\nif not API_TOKEN:\n    raise RuntimeError(\"API_TOKEN environment variable is required\")\n```"
+    },
+    "tp_probability": 1.0,
+    "priority_score": 3.0
+   },
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B608",
+    "severity": "high",
+    "file_path": "app.py",
+    "line": 15,
+    "column": 12,
+    "message": "Possible SQL injection vector through string-based query construction.",
+    "snippet": "14 def get_user(user_id):\n15     query = \"SELECT * FROM users WHERE id = '\" + user_id + \"'\"\n16     result = db.execute(query)\n",
+    "cwe_id": 89,
+    "confidence": "LOW",
+    "metadata": {
+     "test_name": "hardcoded_sql_expressions",
+     "explanation": "The query builds a literal SQL string by concatenating the `user_id` value, so an attacker could inject arbitrary SQL through a specially crafted `user_id`.  \nFix by using a parameterized query so the driver handles escaping:\n\n```python\ndef get_user(user_id):\n    query = \"SELECT * FROM users WHERE id = %s\"\n    result = db.execute(query, (user_id,))  # or '?' for SQLite\n    return result\n```\n\nThis ensures `user_id` is treated as a data value, not executable code."
+    },
+    "tp_probability": 0.9306626915931702,
+    "priority_score": 2.7919880747795105
+   },
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B608",
+    "severity": "high",
+    "file_path": "app.py",
+    "line": 20,
+    "column": 15,
+    "message": "Possible SQL injection vector through string-based query construction.",
+    "snippet": "19 def delete_account(user_id):\n20     db.execute(\"DELETE FROM users WHERE id = \" + user_id)\n21     return {\"status\": \"deleted\"}\n",
+    "cwe_id": 89,
+    "confidence": "MEDIUM",
+    "metadata": {
+     "test_name": "hardcoded_sql_expressions",
+     "explanation": "`user_id` is concatenated straight into the SQL string. If an attacker supplies something like `1; DROP TABLE users; --`, the statement sent to the database becomes two commands, potentially deleting your table. The driver sees the entire string as a single query, so no validation occurs.\n\n**Fix:** Use a parameterized statement so the driver treats the value as data, not code.\n\n```python\ndef delete_account(user_id):\n    # Ensure user_id is an integer or cast it if necessary\n    db.execute(\"DELETE FROM users WHERE id = ?\", (int(user_id),))\n    return {\"status\": \"deleted\"}\n```\n\nReplace `?` (or `%s` for some drivers) with the appropriate placeholder for your database library. This prevents injection because the value is bound separately from the query text."
+    },
+    "tp_probability": 0.9306626915931702,
+    "priority_score": 2.7919880747795105
+   },
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B113",
+    "severity": "medium",
+    "file_path": "app.py",
+    "line": 25,
+    "column": 15,
+    "message": "Call to requests without timeout",
+    "snippet": "24     try:\n25         return requests.get(url, headers={\"Authorization\": API_TOKEN}).json()\n26     except:\n",
+    "cwe_id": 400,
+    "confidence": "LOW",
+    "metadata": {
+     "test_name": "request_without_timeout",
+     "explanation": "The request can block forever if the remote host stalls or the network is slow, exhausting your process\u2019s resources and opening the door to a denial\u2011of\u2011service. Add a timeout and handle only relevant exceptions.\n\n```python\nimport requests\nimport logging\n\ndef fetch_external_data(url):\n    try:\n        response = requests.get(url,\n                                headers={\"Authorization\": API_TOKEN},\n                                timeout=5)          # seconds\n        response.raise_for_status()\n        return response.json()\n    except requests.RequestException as e:      # covers timeouts, DNS, HTTP errors\n        logging.error(f\"Failed to fetch {url}: {e}\")\n        return None\n```\nThis guarantees the call returns within 5\u202fs and logs any failure instead of silently ignoring it."
+    },
+    "tp_probability": 1.0,
+    "priority_score": 2.0
+   },
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B311",
+    "severity": "medium",
+    "file_path": "app.py",
+    "line": 12,
+    "column": 26,
+    "message": "Standard pseudo-random generators are not suitable for security/cryptographic purposes.",
+    "snippet": "11 def retry_delay(attempt):\n12     return 2 ** attempt + random.random()\n13 \n",
+    "cwe_id": 330,
+    "confidence": "HIGH",
+    "metadata": {
+     "test_name": "blacklist",
+     "explanation": "The random number is only used to add jitter to an exponential\u2011backoff delay, not to create a token or secret. Jitter is a non\u2011security concern, so `random.random()` is acceptable. The warning is a false positive in this context; no change is required. If this value were ever used to generate a session ID, password reset key, or similar, replace it with `secrets.randbelow()` or `secrets.SystemRandom().random()`."
+    },
+    "tp_probability": 0.9983861446380615,
+    "priority_score": 1.996772289276123
+   },
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B110",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 26,
+    "column": 4,
+    "message": "Try, Except, Pass detected.",
+    "snippet": "25         return requests.get(url, headers={\"Authorization\": API_TOKEN}).json()\n26     except:\n27         pass\n",
+    "cwe_id": 703,
+    "confidence": "HIGH",
+    "metadata": {
+     "test_name": "try_except_pass"
+    },
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "F401",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 2,
+    "column": 1,
+    "message": "'os' imported but unused",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 8,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 11,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 14,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 19,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 23,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "F821",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 16,
+    "column": 14,
+    "message": "undefined name 'db'",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "F821",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 20,
+    "column": 5,
+    "message": "undefined name 'db'",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E722",
+    "severity": "low",
+    "file_path": "app.py",
+    "line": 26,
+    "column": 5,
+    "message": "do not use bare 'except'",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   }
+  ]
+ },
+ "minor": {
+  "raw": 2,
+  "dropped": [],
+  "findings": [
+   {
+    "tool": "bandit",
+    "category": "security",
+    "rule_id": "B113",
+    "severity": "medium",
+    "file_path": "profile.py",
+    "line": 4,
+    "column": 11,
+    "message": "Call to requests without timeout",
+    "snippet": "3 def fetch_profile(user_id):\n4     resp = requests.get(\"https://api.internal/users/\" + str(user_id))\n5     resp.raise_for_status()\n",
+    "cwe_id": 400,
+    "confidence": "LOW",
+    "metadata": {
+     "test_name": "request_without_timeout",
+     "explanation": "The call to `requests.get` has no `timeout` argument, so if the external service hangs or is slow, your function will block forever. In a web service or long\u2011running script this can exhaust threads or processes, making the application unresponsive and vulnerable to a denial\u2011of\u2011service scenario.  \n\n**Fix** \u2013 supply a reasonable timeout (seconds). If you need a different timeout per environment, consider using a configuration variable.\n\n```python\ndef fetch_profile(user_id):\n    resp = requests.get(\n        f\"https://api.internal/users/{user_id}\",\n        timeout=5.0          # 5\u2011second timeout, adjust as needed\n    )\n    resp.raise_for_status()\n    return resp.json()\n```\n\nIf the timeout needs to be dynamic, replace `5.0` with a variable or configuration value. This guarantees the call will fail fast rather than hang indefinitely."
+    },
+    "tp_probability": 1.0,
+    "priority_score": 2.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "profile.py",
+    "line": 3,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   }
+  ]
+ },
+ "clean": {
+  "raw": 2,
+  "dropped": [],
+  "findings": [
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "F401",
+    "severity": "low",
+    "file_path": "clean.py",
+    "line": 1,
+    "column": 1,
+    "message": "'sqlite3' imported but unused",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   },
+   {
+    "tool": "flake8",
+    "category": "style",
+    "rule_id": "E302",
+    "severity": "low",
+    "file_path": "clean.py",
+    "line": 3,
+    "column": 1,
+    "message": "expected 2 blank lines, found 1",
+    "snippet": null,
+    "cwe_id": null,
+    "confidence": null,
+    "metadata": {},
+    "tp_probability": 1.0,
+    "priority_score": 1.0
+   }
+  ]
+ }
+}
