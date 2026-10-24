@@ -44,7 +44,10 @@ def _main(argv: list[str] | None, *, groq_client) -> int:
 
 
 def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="fixr")
+    parser = argparse.ArgumentParser(
+        prog="fixr",
+        description="Find, rank and explain security issues in Python code, on your machine.",
+    )
     parser.add_argument("--version", action="version", version=f"fixr {__version__}")
     subparsers = parser.add_subparsers(dest="command")
     _add_scan_parser(subparsers)
@@ -53,31 +56,74 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 def _add_scan_parser(subparsers: argparse._SubParsersAction) -> None:
-    scan_parser = subparsers.add_parser("scan", help="Scan a Python project")
-    scan_parser.add_argument("path", nargs="?", default=".", metavar="PATH")
-    scan_parser.add_argument("--format", choices=("text", "json"), default="text")
-    scan_parser.add_argument("--fix-prompt", metavar="FILE")
-    explain = scan_parser.add_mutually_exclusive_group()
-    explain.add_argument("--no-explain", action="store_true")
-    explain.add_argument("--explain", type=_explain_count, metavar="N")
-    scan_parser.add_argument("--show-style", action="store_true")
+    scan_parser = subparsers.add_parser(
+        "scan", help="Scan a Python project", description="Scan a Python project."
+    )
+    scan_parser.add_argument(
+        "path",
+        nargs="?",
+        default=".",
+        metavar="PATH",
+        help="folder, .py file or .zip to scan (default: the current folder)",
+    )
+    scan_parser.add_argument(
+        "--format", choices=("text", "json"), default="text", help="output format (default: text)"
+    )
+    scan_parser.add_argument(
+        "--fix-prompt", metavar="FILE", help="also write a fix prompt for an AI coding tool"
+    )
+    _add_explain_options(scan_parser)
+    scan_parser.add_argument(
+        "--show-style", action="store_true", help="list every style note instead of a summary"
+    )
     scan_parser.add_argument(
         "--fail-on",
         choices=("none", "low", "medium", "high"),
         default="high",
+        help="lowest severity that makes the exit code 1 (default: high)",
     )
-    scan_parser.add_argument("--verbose", action="store_true")
+    _add_verbose_option(scan_parser)
 
 
 def _add_chat_parser(subparsers: argparse._SubParsersAction) -> None:
-    chat_parser = subparsers.add_parser("chat", help="Ask questions about a scan")
+    chat_parser = subparsers.add_parser(
+        "chat",
+        help="Ask questions about a scan",
+        description="Ask questions about a scan. Needs GROQ_API_KEY.",
+    )
     source = chat_parser.add_mutually_exclusive_group()
-    source.add_argument("path", nargs="?", default=None, metavar="PATH")
-    source.add_argument("--from", dest="from_file", metavar="FILE")
-    explain = chat_parser.add_mutually_exclusive_group()
-    explain.add_argument("--no-explain", action="store_true")
-    explain.add_argument("--explain", type=_explain_count, metavar="N")
-    chat_parser.add_argument("--verbose", action="store_true")
+    source.add_argument(
+        "path",
+        nargs="?",
+        default=None,
+        metavar="PATH",
+        help="folder, .py file or .zip to scan first (default: the current folder)",
+    )
+    source.add_argument(
+        "--from",
+        dest="from_file",
+        metavar="FILE",
+        help="chat about a saved `fixr scan --format json` result instead of scanning",
+    )
+    _add_explain_options(chat_parser)
+    _add_verbose_option(chat_parser)
+
+
+def _add_explain_options(parser: argparse.ArgumentParser) -> None:
+    explain = parser.add_mutually_exclusive_group()
+    explain.add_argument(
+        "--no-explain", action="store_true", help="do not send any code to Groq for explanations"
+    )
+    explain.add_argument(
+        "--explain",
+        type=_explain_count,
+        metavar="N",
+        help="explain the top N Bandit findings with Groq (1-20, default: 5)",
+    )
+
+
+def _add_verbose_option(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--verbose", action="store_true", help="show the scanners' own logs")
 
 
 def _explain_count(value: str) -> int:

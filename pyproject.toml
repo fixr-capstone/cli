@@ -46,6 +46,8 @@ packages = ["src/fixr_cli"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["slow: runs the real scanners"]
+# Raised inside bandit's plugin loader (stevedore), not by this code.
+filterwarnings = ["ignore:The verify_requirements argument is now a no-op"]
 
 [tool.ruff]
 line-length = 100
