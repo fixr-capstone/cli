@@ -395,7 +395,7 @@ def _style_summary(groups: list[tuple[str, list[int]]], *, show_style: bool) -> 
     rule_word = "rule" if rules == 1 else "rules"
     by_count = sorted(groups, key=lambda pair: (-len(pair[1]), pair[0]))
     top = ", ".join(f"{name} {len(members):,}" for name, members in by_count[:_STYLE_TOP])
-    sentence = f"{count} style {note} from flake8 across {rules} {rule_word} (top: {top})."
+    sentence = f"{count:,} style {note} from flake8 across {rules} {rule_word} (top: {top})."
     if not show_style:
         sentence += " Run with --show-style to list them."
     return sentence
@@ -478,7 +478,7 @@ def _where(finding: Finding) -> str:
 def _render_footer(report: Report, console: Console) -> None:
     high, medium, low = _severity_totals(report)
     console.print(
-        f"{high} high, {medium} medium, {low} low findings (style notes not counted)."
+        f"{high:,} high, {medium:,} medium, {low:,} low findings (style notes not counted)."
     )
     if report.fail_on == "none":
         return
