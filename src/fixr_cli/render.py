@@ -55,8 +55,11 @@ def build_report(
 ) -> Report:
     api = [finding.model_dump(mode="json") for finding in result.findings]
     display = [display_finding(item, index) for index, item in enumerate(api)]
+    # The classifier's doubt on a kept high-severity finding counts the same as an
+    # explanation that found it harmless: both land under "Likely false alarms".
     false_alarm = [
-        _has_explanation(item) and is_likely_false_alarm(shown.description)
+        bool(_metadata(item).get("likely_false_alarm"))
+        or (_has_explanation(item) and is_likely_false_alarm(shown.description))
         for item, shown in zip(api, display, strict=True)
     ]
     return Report(
@@ -368,10 +371,12 @@ def _render_false_alarms(report: Report, console: Console) -> None:
             continue
         shown = report.display[index]
         sentence = _first_sentence(shown.description)
-        lines.append(f"{_where(shown)}  {shown.rule or ''}  {shown.title}. {sentence}")
+        lines.append(
+            f"{_where(shown)}  {shown.rule or ''}  {shown.title.removesuffix('.')}. {sentence}"
+        )
     if not lines:
         return
-    _heading(console, "Likely false alarms (Fixr's explanation found these harmless)")
+    _heading(console, "Likely false alarms (the classifier or Fixr's explanation doubts these)")
     for line in lines:
         console.print(Text(line))
     console.print()

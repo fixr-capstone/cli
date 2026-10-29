@@ -1,13 +1,13 @@
 [project]
 name = "fixr-cli"
-version = "0.1.0"
+version = "0.2.0"
 description = "Security triage for Python projects from the command line: Fixr's scanners, false-alarm filter and explanations"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "static-analysis-bundle @ git+https://github.com/fixr-capstone/static-analysis-bundle@v0.1.1",
-    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.2.0",
-    "fixr-rag @ git+https://github.com/fixr-capstone/RAG-implementation@v0.2.1",
+    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.3.0",
+    "fixr-rag @ git+https://github.com/fixr-capstone/RAG-implementation@v0.2.2",
     # static-analysis-bundle drives these through their internal APIs, so a new
     # release can break it; keep them on the versions the backend is locked to.
     "bandit==1.9.4",
@@ -24,7 +24,7 @@ fixr = "fixr_cli.cli:main"
 [tool.uv]
 # fixr-rag points uv at ml-filtering over SSH; this keeps every clone on HTTPS.
 override-dependencies = [
-    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.2.0",
+    "ml-filtering @ git+https://github.com/fixr-capstone/ML-filtering-@v0.3.0",
 ]
 
 [dependency-groups]

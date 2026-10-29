@@ -1,3 +1,4 @@
+import math
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -93,6 +94,7 @@ def to_finding(api: Mapping[str, Any], index: int) -> Finding:
     rule_id = api["rule_id"]
     if not description:
         description = f"{rule_id}: {message}"
+    description = _doubt(api, metadata) + description
     file_path = api["file_path"].replace("\\", "/")
     line = api.get("line")
     if line is None:
@@ -111,6 +113,20 @@ def to_finding(api: Mapping[str, Any], index: int) -> Finding:
         suggested_fix=fix,
         style=api.get("category") == "style",
         rule=rule_id,
+    )
+
+
+# High severity is never hidden; when the classifier doubts it, it is kept and said so.
+def _doubt(api: Mapping[str, Any], metadata: object) -> str:
+    if not isinstance(metadata, dict) or not metadata.get("likely_false_alarm"):
+        return ""
+    probability = api.get("tp_probability")
+    if not isinstance(probability, (int, float)):
+        probability = 0
+    chance = "under 1" if probability < 0.01 else str(math.floor(probability * 100 + 0.5))
+    return (
+        f"Likely false alarm: Fixr's classifier puts the chance this is real at {chance}%. "
+        "Check it before ignoring it. "
     )
 
 

@@ -12,8 +12,7 @@ around the top 5 Bandit findings are sent to Groq to be explained.
 
 ## Install
 
-You need [uv](https://docs.astral.sh/uv/) and read access to the fixr-capstone repositories
-over HTTPS. uv downloads Python 3.13 itself if you don't have it.
+You need [uv](https://docs.astral.sh/uv/). uv downloads Python 3.13 itself if you don't have it.
 
 ```bash
 git clone https://github.com/fixr-capstone/cli.git
@@ -48,20 +47,40 @@ Exit codes: `0` means nothing at or above `--fail-on`, `1` means there is someth
 means a usage error or a scan that could not run. Style notes and likely false alarms never
 count towards the exit code.
 
-## Explanations and chat
+## Groq key
 
-Set a Groq key in your shell to have the top Bandit findings explained:
+Explanations and `fixr chat` need a [Groq](https://console.groq.com/keys) API key. Without one,
+`fixr scan` still works and tells you so.
+
+For this terminal only:
 
 ```bash
-export GROQ_API_KEY=gsk_...
+export GROQ_API_KEY="gsk_..."      # macOS and Linux
 ```
 
-fixr-rag also reads a `.env` file, but it looks upward from where the package is installed, not
-from the folder you run `fixr` in. For an installed tool that means `~/.env`; in a development
-checkout it means `cli/.env` (gitignored).
+```powershell
+$env:GROQ_API_KEY="gsk_..."        # Windows PowerShell
+```
 
-When an explanation says a finding is harmless, `fixr` lists it under "Likely false alarms"
-instead of counting it, and marks it `"likely_false_alarm": true` in JSON.
+To keep it for every terminal, add the `export` line above to `~/.zshrc` (macOS) or `~/.bashrc`
+(Linux) and open a new terminal. On Windows, run this once and open a new terminal:
+
+```powershell
+setx GROQ_API_KEY "gsk_..."
+```
+
+Or put it in a `.env` file. fixr-rag loads one with python-dotenv, which looks upward from where
+the package is installed, not from the folder you run `fixr` in. For a `uv tool install` that
+means a `~/.env` file containing `GROQ_API_KEY=gsk_...`; in a development checkout run with
+`uv run fixr` it means `cli/.env` (gitignored).
+
+## Explanations and chat
+
+The classifier drops a Bandit finding only when it is under 10% likely to be real, and never
+drops a high-severity one. A high-severity finding below that line is kept and starts with
+"Likely false alarm: Fixr's classifier puts the chance this is real at N%". When an explanation
+says a finding is harmless, or the classifier doubts a kept one, `fixr` lists it under "Likely
+false alarms" instead of counting it, and marks it `"likely_false_alarm": true` in JSON.
 
 `fixr chat` lets you ask questions about a scan. It needs a key.
 

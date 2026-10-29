@@ -32,21 +32,20 @@ Flagged code:
 
 What is wrong:
 
-The call to `requests.get` has no `timeout` argument, so if the external service hangs or is slow, your function will block forever. In a web service or long‑running script this can exhaust threads or processes, making the application unresponsive and vulnerable to a denial‑of‑service scenario.  
-
-Fix – supply a reasonable timeout (seconds). If you need a different timeout per environment, consider using a configuration variable.
+The call to `requests.get` can hang indefinitely if the remote server delays or stalls, causing your application to block or run out of resources.  
+Add a timeout to limit how long the request waits, e.g.:
 
 (see the suggested fix)
 
-If the timeout needs to be dynamic, replace `5.0` with a variable or configuration value. This guarantees the call will fail fast rather than hang indefinitely.
+Adjust the timeout value to suit your tolerance for latency, and ensure the user‑controlled `user_id` is validated or sanitized as needed.
 
 Suggested fix (a starting point, adapt it to the surrounding code):
 
 ```python
 def fetch_profile(user_id):
     resp = requests.get(
-        f"https://api.internal/users/{user_id}",
-        timeout=5.0          # 5‑second timeout, adjust as needed
+        "https://api.internal/users/" + str(user_id),
+        timeout=5.0          # seconds
     )
     resp.raise_for_status()
     return resp.json()

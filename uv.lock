@@ -11,7 +11,7 @@ resolution-markers = [
 ]
 
 [manifest]
-overrides = [{ name = "ml-filtering", git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.2.0" }]
+overrides = [{ name = "ml-filtering", git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.3.0" }]
 
 [[package]]
 name = "annotated-types"
@@ -295,7 +295,7 @@ wheels = [
 
 [[package]]
 name = "fixr-cli"
-version = "0.1.0"
+version = "0.2.0"
 source = { editable = "." }
 dependencies = [
     { name = "bandit" },
@@ -319,9 +319,9 @@ dev = [
 requires-dist = [
     { name = "bandit", specifier = "==1.9.4" },
     { name = "deptry", specifier = "==0.25.1" },
-    { name = "fixr-rag", git = "https://github.com/fixr-capstone/RAG-implementation?rev=v0.2.1" },
+    { name = "fixr-rag", git = "https://github.com/fixr-capstone/RAG-implementation?rev=v0.2.2" },
     { name = "flake8", specifier = "==7.3.0" },
-    { name = "ml-filtering", git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.2.0" },
+    { name = "ml-filtering", git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.3.0" },
     { name = "packaging", specifier = ">=24" },
     { name = "pip-audit", specifier = "==2.10.1" },
     { name = "rich", specifier = ">=13.7" },
@@ -337,7 +337,7 @@ dev = [
 [[package]]
 name = "fixr-rag"
 version = "0.1.0"
-source = { git = "https://github.com/fixr-capstone/RAG-implementation?rev=v0.2.1#9bc8600ab6e13d7a8814ae0b1b45eafe663a045f" }
+source = { git = "https://github.com/fixr-capstone/RAG-implementation?rev=v0.2.2#88e7d4ac029612f041a97be6483d3f19c4346423" }
 dependencies = [
     { name = "groq" },
     { name = "ml-filtering" },
@@ -488,7 +488,7 @@ wheels = [
 [[package]]
 name = "ml-filtering"
 version = "0.1.0"
-source = { git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.2.0#2d54ca569272a319248ee0f669bfc4f2fce22814" }
+source = { git = "https://github.com/fixr-capstone/ML-filtering-?rev=v0.3.0#d41cf9a5083644007d3ecab0a54993b57e3bf3ec" }
 dependencies = [
     { name = "pandas" },
     { name = "pydantic" },

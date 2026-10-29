@@ -110,3 +110,41 @@ def test_false_positive_phrase_is_a_false_alarm() -> None:
 
 def test_real_fix_is_not_a_false_alarm() -> None:
     assert is_likely_false_alarm("Use parameterised queries to fix the injection.") is False
+
+
+def _flagged(probability: float | None) -> dict[str, Any]:
+    item: dict[str, Any] = {
+        "rule_id": "B324",
+        "category": "security",
+        "severity": "high",
+        "file_path": "app.py",
+        "line": 3,
+        "message": "Use of weak MD5 hash for security.",
+        "snippet": "3 hashlib.md5(x)\n",
+        "metadata": {"likely_false_alarm": True},
+    }
+    if probability is not None:
+        item["tp_probability"] = probability
+    return item
+
+
+@pytest.mark.parametrize(
+    ("probability", "chance"),
+    [(0.004, "under 1"), (0.01, "1"), (0.045, "5"), (0.1, "10"), (None, "under 1")],
+)
+def test_to_finding_says_when_the_classifier_doubts_a_kept_finding(
+    probability: float | None, chance: str
+) -> None:
+    # Same wording as the website's toFinding (frontend/lib/api.ts).
+    finding = to_finding(_flagged(probability), 0)
+    assert finding.description == (
+        f"Likely false alarm: Fixr's classifier puts the chance this is real at {chance}%. "
+        "Check it before ignoring it. B324: Use of weak MD5 hash for security."
+    )
+    assert is_likely_false_alarm(finding.description)
+
+
+def test_to_finding_leaves_unflagged_findings_alone() -> None:
+    item = _flagged(0.5)
+    item["metadata"] = {}
+    assert to_finding(item, 0).description == "B324: Use of weak MD5 hash for security."

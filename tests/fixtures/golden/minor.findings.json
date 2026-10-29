@@ -5,11 +5,11 @@
     "rule": "B113",
     "severity": "medium",
     "title": "Call to requests without timeout",
-    "description": "The call to `requests.get` has no `timeout` argument, so if the external service hangs or is slow, your function will block forever. In a web service or long‑running script this can exhaust threads or processes, making the application unresponsive and vulnerable to a denial‑of‑service scenario.  \n\nFix – supply a reasonable timeout (seconds). If you need a different timeout per environment, consider using a configuration variable.\n\n(see the suggested fix)\n\nIf the timeout needs to be dynamic, replace `5.0` with a variable or configuration value. This guarantees the call will fail fast rather than hang indefinitely.",
+    "description": "The call to `requests.get` can hang indefinitely if the remote server delays or stalls, causing your application to block or run out of resources.  \nAdd a timeout to limit how long the request waits, e.g.:\n\n(see the suggested fix)\n\nAdjust the timeout value to suit your tolerance for latency, and ensure the user‑controlled `user_id` is validated or sanitized as needed.",
     "file": "profile.py",
     "line": 4,
     "snippet": "    resp = requests.get(\"https://api.internal/users/\" + str(user_id))\n    resp.raise_for_status()",
-    "suggestedFix": "def fetch_profile(user_id):\n    resp = requests.get(\n        f\"https://api.internal/users/{user_id}\",\n        timeout=5.0          # 5‑second timeout, adjust as needed\n    )\n    resp.raise_for_status()\n    return resp.json()"
+    "suggestedFix": "def fetch_profile(user_id):\n    resp = requests.get(\n        \"https://api.internal/users/\" + str(user_id),\n        timeout=5.0          # seconds\n    )\n    resp.raise_for_status()\n    return resp.json()"
   },
   {
     "id": "api1",

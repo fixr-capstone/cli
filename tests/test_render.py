@@ -394,3 +394,40 @@ def test_fix_prompt_shelves_only_flagged_descriptions() -> None:
 def test_footer_hides_the_fail_line_when_fail_on_is_none() -> None:
     text = _text(_result(_kitchen()), fail_on="none")
     assert "--fail-on" not in text
+
+
+def _doubted() -> RankedFinding:
+    return _finding(
+        rule_id="B324",
+        severity="high",
+        file_path="app.py",
+        line=33,
+        message="Use of weak MD5 hash for security.",
+        tp_probability=0.04,
+        priority_score=0.12,
+        metadata={"likely_false_alarm": True},
+    )
+
+
+def test_a_kept_high_severity_finding_the_classifier_doubts_is_a_likely_false_alarm() -> None:
+    # No Groq explanation is needed: the website files these under "Likely false alarms" too.
+    report = build_report(_result([_doubted(), _finding(rule_id="B602", severity="high", line=4)]))
+
+    assert report.false_alarm == [True, False]
+    assert len(failing(report)) == 1
+    counts = to_json(report)["counts"]
+    assert counts["likely_false_alarms"] == 1
+    assert counts["failing"] == 1
+    assert to_json(report)["findings"][0]["likely_false_alarm"] is True
+
+    text = _text(_result([_doubted()]))
+    assert "Likely false alarms" in text
+    assert "app.py:33  B324  Use of weak MD5 hash for security. Likely false alarm:" in text
+    assert "chance this is real" in text
+    assert "Nothing to fix." in text
+    assert "0 at or above --fail-on high (1 likely false alarm not counted)" in text
+
+    prompt = fix_prompt_text(build_report(_result([_doubted()])))
+    assert "and 1 likely false alarm." in prompt
+    assert "## Likely false alarms, leave these alone" in prompt
+    assert "## Fix these" not in prompt
