@@ -276,12 +276,16 @@ def _render_explained(report: Report, console: Console) -> None:
         console.print(Text(f"{_where(shown)}  {shown.rule or ''}"))
         if shown.snippet:
             console.print("Flagged code:")
-            console.print(Syntax(shown.snippet, "python", background_color="default"))
+            console.print(
+                Syntax(shown.snippet, "python", background_color="default", word_wrap=True)
+            )
         console.print("What is wrong:")
         console.print(Text(shown.description))
         if shown.suggested_fix:
             console.print("Suggested fix:")
-            console.print(Syntax(shown.suggested_fix, "python", background_color="default"))
+            console.print(
+                Syntax(shown.suggested_fix, "python", background_color="default", word_wrap=True)
+            )
         console.print()
 
 

@@ -265,6 +265,28 @@ def test_text_report_covers_each_section() -> None:
     assert "Nothing to fix." not in text
 
 
+def test_long_code_lines_wrap_instead_of_being_cropped() -> None:
+    flagged = 'if token == "True" and argv[index - 1].startswith("--"): continue'
+    fix = 'if token == "True" and argv[index - 1].startswith(("--", "-")):  # nosec B105'
+    finding = _finding(
+        rule_id="B105",
+        severity="high",
+        file_path="cli.py",
+        line=7,
+        message="Possible hardcoded password: 'True'",
+        snippet=f"7 {flagged}\n",
+        metadata={"explanation": f"Explanation.\n\n```python\n{fix}\n```"},
+        priority_score=3.0,
+    )
+    report = build_report(_result([finding]), fail_on="high", explain_limit=5)
+    buffer = io.StringIO()
+    console = Console(file=buffer, width=40, height=40)
+    render_text(report, console, show_style=False)
+    text = "".join(buffer.getvalue().split())
+    assert "".join(flagged.split()) in text
+    assert "".join(fix.split()) in text
+
+
 def test_show_style_lists_rules_without_the_length_count() -> None:
     text = _text(_result(_kitchen()), show_style=True)
     assert "Run with --show-style" not in text

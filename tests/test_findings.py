@@ -108,6 +108,56 @@ def test_false_positive_phrase_is_a_false_alarm() -> None:
     assert is_likely_false_alarm("This is a false positive.") is True
 
 
+_GROQ_B105 = (
+    'The string `"True"` is not a credential; it\u2019s just a literal used to filter out a '
+    "boolean value from the command\u2011line argument list. The code simply discards any token "
+    'that equals `"True"` when it follows an option flag.\n\n'
+    "Fix \u2013 No functional change is required. Mark the line to silence Bandit:\n\n"
+    "(see the suggested fix)\n\n"
+    "This removes the false\u2011positive alert while keeping the original logic intact."
+)
+
+
+def test_website_rule_misses_groq_b105_wording() -> None:
+    assert matches_website_rule(_GROQ_B105) is False
+    assert is_likely_false_alarm(_GROQ_B105) is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "This is a false-positive.",
+        "This is a false\u2011positive.",
+        "This is a false\u2010alarm.",
+        "This is a false\u00a0positive.",
+        "These are false positives.",
+        "No functional change is required.",
+        "No code changes are needed.",
+        "No further change is needed.",
+        "The string is not a credential; it is a literal.",
+        "It is not a password, just a label.",
+        "It is not a secret and is public.",
+    ],
+)
+def test_wider_false_alarm_wording(text: str) -> None:
+    assert is_likely_false_alarm(text) is True
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "This is not a false positive: the key is hard-coded.",
+        "This isn't a false alarm.",
+        "This isn\u2019t a false alarm.",
+        "This is never a false positive.",
+        "MD5 is not a password hashing algorithm.",
+        "Using random is not a secure choice for tokens.",
+    ],
+)
+def test_negated_or_unrelated_wording_is_not_a_false_alarm(text: str) -> None:
+    assert is_likely_false_alarm(text) is False
+
+
 def test_real_fix_is_not_a_false_alarm() -> None:
     assert is_likely_false_alarm("Use parameterised queries to fix the injection.") is False
 

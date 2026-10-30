@@ -1,6 +1,6 @@
 [project]
 name = "fixr-cli"
-version = "0.2.0"
+version = "0.2.1"
 description = "Security triage for Python projects from the command line: Fixr's scanners, false-alarm filter and explanations"
 readme = "README.md"
 requires-python = ">=3.13"

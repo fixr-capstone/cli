@@ -18,9 +18,12 @@ WEBSITE_FALSE_ALARM = re.compile(
     re.IGNORECASE | re.ASCII,
 )
 FALSE_ALARM = re.compile(
-    r"\bfalse (positive|alarm)\b|no (code )?change is (required|needed)|no action is (required|needed)|\bis harmless\b"
-    r"|no (?:code )?changes? (?:to [^.]{1,60} )?(?:is|are) (?:required|needed)"
-    r"|\bnot an? (?:actual|real) (?:password|secret|credential|key|token)\b",
+    r"(?<!not a )(?<!not an )(?<!isn't a )(?<!isn\u2019t a )(?<!never a )"
+    r"\bfalse[ \-\u2010\u2011\u00a0](?:positive|alarm)s?\b"
+    r"|no (code )?change is (required|needed)|no action is (required|needed)|\bis harmless\b"
+    r"|no (?:\w+ )?changes? (?:to [^.]{1,60} )?(?:is|are) (?:required|needed)"
+    r"|\bnot an? (?:actual|real) (?:password|secret|credential|key|token)\b"
+    r"|\bnot an? (?:(?:actual|real) )?(?:password|secret|credentials?)(?=[;,.:)!]|\s*$|\s+(?:and|but)\b)",
     re.IGNORECASE | re.ASCII,
 )
 
